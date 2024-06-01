@@ -245,7 +245,7 @@ class TibberHome:
         pricetime = dt.datetime.now().astimezone(self._tibber_control.time_zone)
         #_LOGGER.warning(pricetime)
         #_LOGGER.warning(pricelist)
-        return self.current_price_rank(pricelist,pricetime)
+        return self.current_price_rank(pricelist,pricetime) or 24
 
 
     @property
