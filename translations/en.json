@@ -1,0 +1,179 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_access_token": "Invalid access token",
+            "timeout": "Timeout establishing connection"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Access token"
+                },
+                "description": "Enter your access token from {url}"
+            },
+            "settings": {
+                "data": {
+                    "not_in_use": "Not in use with YAML",
+                    "surcharge_price_excl": "Surcharge price per kWh Excl Tax",
+                    "tax_rate": "Tax Rate",
+                    "tax_per_kwh": "Tax fee per kWh"
+                   
+                   
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "not_setup": "Tibber Advanced is not setup.",
+            "pending_tasks": "There are pending tasks. Try again later.",
+            "release_limit_value": "The release limit needs to be between 1 and 100."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "not_in_use": "Not in use with YAML",
+                    "surcharge_price_excl": "Surcharge price per kWh Excl Tax",
+                    "tax_rate": "Tax Rate",
+                    "tax_per_kwh": "Tax fee per kWh"
+                   
+                   
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "accumulated_consumption": {
+                "name": "Accumulated consumption"
+            },
+            "accumulated_consumption_last_hour": {
+                "name": "Accumulated consumption current hour"
+            },
+            "accumulated_cost": {
+                "name": "Accumulated cost"
+            },
+            "accumulated_production": {
+                "name": "Accumulated production"
+            },
+            "accumulated_production_last_hour": {
+                "name": "Accumulated production current hour"
+            },
+            "electricity_price_excl_base": {
+                "name": "Electricity base price without surcharge"
+              },
+
+              "electricity_price_energy_tax_excl": {
+
+                "name": "Electricity energy tax excl VAT"
+              },
+
+              "electricity_price_calc": {
+                "name": "Electricity price total incl vat (Calculated)"
+              },
+              
+        
+              "electricity_price_energy_tax_incl": {
+        
+                "name": "Electricity energy tax incl VAT"
+              },
+
+            "tax_rate": {
+                "name": "Tax rate %"
+              },
+              "tax_per_kwh": {
+                "name": "Tax fee per kWh"
+              },
+
+            "electricity_price_hist": {
+                "name": "Electricity price excl history"
+            },
+            "accumulated_reward": {
+                "name": "Accumulated reward"
+            },
+            "average_power": {
+                "name": "Average power"
+            },
+            "current_l1": {
+                "name": "Current L1"
+            },
+            "current_l2": {
+                "name": "Current L2"
+            },
+            "current_l3": {
+                "name": "Current L3"
+            },
+            "electricity_price": {
+                "name": "Electricity price total incl vat"
+            },
+            "electricity_price_excl": {
+              "name": "Electricity price excl energy tax incl vat"
+            },
+            "electricity_price_excl_cent": {
+                "name": "Electricity price excl tax in cents"
+              },
+              "electricity_price_surcharge_excl": {
+                "name": "Electricity price Tibber surcharge excl tax"
+              },
+              "electricity_price_surcharge_incl": {
+                "name": "Electricity price Tibber surcharge incl tax"
+              },
+        
+            "estimated_hour_consumption": {
+                "name": "Estimated consumption current hour"
+            },
+            "last_meter_consumption": {
+                "name": "Last meter consumption"
+            },
+            "last_meter_production": {
+                "name": "Last meter production"
+            },
+            "last_price_update": {
+                "name": "Last price update"
+            },
+            "max_power": {
+                "name": "Max power"
+            },
+            "min_power": {
+                "name": "Min power"
+            },
+            "month_cons": {
+                "name": "Monthly net consumption"
+            },
+            "month_cost": {
+                "name": "Monthly cost"
+            },
+            "peak_hour": {
+                "name": "Monthly peak hour consumption"
+            },
+            "peak_hour_time": {
+                "name": "Time of max hour consumption"
+            },
+            "power": {
+                "name": "Power"
+            },
+            "power_factor": {
+                "name": "Power factor"
+            },
+            "power_production": {
+                "name": "Power production"
+            },
+            "signal_strength": {
+                "name": "Signal strength"
+            },
+            "voltage_phase1": {
+                "name": "Voltage phase1"
+            },
+            "voltage_phase2": {
+                "name": "Voltage phase2"
+            },
+            "voltage_phase3": {
+                "name": "Voltage phase3"
+            }
+        }
+    }
+}
