@@ -232,6 +232,39 @@ class TibberHome:
         if price_info := await self._tibber_control.execute(PRICE_INFO % self.home_id):
             self._process_price_info(price_info)
 
+    def getCurrentPrices(self, hourstart: int, hourend: int) -> int:
+        pricelist =[]
+        for date in self._price_info:
+            if self._price_info[date]['timestamp'].day == dt.datetime.now().day:
+                if (self._price_info[date]['timestamp'].hour >= hourstart) and (self._price_info[date]['timestamp'].hour <=hourend):
+                    pricelist.append({'hour' :self._price_info[date]['timestamp'].hour ,
+                                    'price': self._price_info[date]['energy_wsi']
+                                    }
+                                    )
+
+        pricetime = dt.datetime.now().astimezone(self._tibber_control.time_zone)
+        #_LOGGER.warning(pricetime)
+        #_LOGGER.warning(pricelist)
+        return self.current_price_rank(pricelist,pricetime)
+
+
+    @property
+    def hour_cheapest_top(self) -> int:
+        return  self.getCurrentPrices(0,23)
+
+    
+    @property
+    def hour_cheapest_top_after_0000(self) -> int:
+        return  self.getCurrentPrices(0,7)
+    
+    @property
+    def hour_cheapest_top_after_0800(self) -> int:
+        return  self.getCurrentPrices(8,17)
+    
+    @property
+    def hour_cheapest_top_after_1800(self) -> int:
+        return  self.getCurrentPrices(18,23)
+
     def _process_price_info(self, price_info: dict[str, dict[str, Any]]) -> None:
         """Processes price information retrieved from a GraphQL query.
         The information from the provided dictionary is extracted, then the
@@ -259,6 +292,8 @@ class TibberHome:
                 self._price_info[data.get("startsAt")] = { 
                     'total': data.get("total"),
                     'energy': data.get("energy"),
+                    'energy_ws': data.get("energy") + self._tibber_control.surcharge_price_excl,
+                    'energy_wsi': (data.get("energy") + self._tibber_control.surcharge_price_excl) *self._tibber_control.tax_rate,
                     'tax': data.get("tax"),
                     'timestamp' :   dt.datetime.fromisoformat(data.get("startsAt"))                 
                 }
@@ -498,27 +533,30 @@ class TibberHome:
         """Gets the rank (1-24) of how expensive the current price is compared to the other prices today."""
         # No price -> no rank
         if price_time is None:
+            #_LOGGER.warning("price_time is none")
             return None
-        # Map price_total to a list of tuples (datetime, float)
-        price_items_typed: list[tuple[dt.datetime, float]] = [
-            (
-                dt.datetime.fromisoformat(time).astimezone(self._tibber_control.time_zone),
-                price,
-            )
-            for time, price in price_total.items()
-        ]
+
+        
+        #_LOGGER.warning("current_price_rank: price_items_typed")
+        #_LOGGER.warning(price_items_typed)
 
         # Filter out prices not from today, sort by price
         prices_today_sorted = sorted(
-            [item for item in price_items_typed if item[0].date() == price_time.date()],
-            key=lambda x: x[1],
+            price_total,
+            key=lambda x: x['price'],
         )
+
+        #_LOGGER.warning("current_price_rank: prices_today_sorted")
+        #_LOGGER.warning(prices_today_sorted)
         # Find the rank of the current price
         try:
-            price_rank = next(idx for idx, item in enumerate(prices_today_sorted, start=1) if item[0] == price_time)
+            price_rank = next(idx for idx, item in enumerate(prices_today_sorted, start=1) if item['hour'] == price_time.hour)
         except StopIteration:
             price_rank = None
 
+
+        #_LOGGER.warning("current_price_rank: price_rank")
+        #_LOGGER.warning(price_rank)
         return price_rank
 
     def current_price_data(self) -> tuple[float | None, str | None, dt.datetime | None, int | None]:

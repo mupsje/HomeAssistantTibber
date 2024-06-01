@@ -36,10 +36,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.device_registry import (
-    DeviceInfo,
-    async_get as async_get_dev_reg,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
 from homeassistant.helpers.typing import StateType
@@ -52,6 +50,7 @@ from dataclasses import dataclass
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
+from .coordinator import TibberDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -249,6 +248,28 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
 )
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="hour_cheapest_top",
+        translation_key="hour_cheapest_top",
+    ),
+    SensorEntityDescription(
+        key="hour_cheapest_top_after_0000",
+        translation_key="hour_cheapest_top_after_0000",
+    ),
+    SensorEntityDescription(
+        key="hour_cheapest_top_after_0800",
+        translation_key="hour_cheapest_top_after_0800",
+    ),
+
+    SensorEntityDescription(
+        key="hour_cheapest_top_after_1800",
+        translation_key="hour_cheapest_top_after_1800",
+    ),
+
+
+    
+
+
     TibberSensorEntityDescription(
         key="month_cost",
         translation_key="month_cost",
@@ -349,7 +370,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
 
 
-        SensorEntityDescription(
+    SensorEntityDescription(
         key="tax_rate",
         translation_key="tax_rate",
         icon= ICON
@@ -378,8 +399,8 @@ async def async_setup_entry(
 
     tibber_connection = hass.data[TIBBER_DOMAIN]
 
-    entity_registry = async_get_entity_reg(hass)
-    device_registry = async_get_dev_reg(hass)
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     coordinator: TibberDataCoordinator | None = None
     entities: list[TibberSensor] = []
@@ -654,7 +675,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
         self._async_remove_device_updates_handler = self.async_add_listener(
             self._add_sensors
         )
-        self.entity_registry = async_get_entity_reg(hass)
+        self.entity_registry = er.async_get(hass)
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
     @callback
@@ -737,150 +758,3 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
             _LOGGER.error(errors[0])
             return None
         return self.data.get("data", {}).get("liveMeasurement")
-
-
-class TibberDataCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
-    """Handle Tibber data and insert statistics."""
-
-    config_entry: ConfigEntry
-
-
-    def __init__(self, hass: HomeAssistant, tibber_connection: tibber.Tibber) -> None:
-        """Initialize the data handler."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"Tibber {tibber_connection.name}",
-            update_interval=timedelta(minutes=1),
-        )
-        self._last_updated: datetime.datetime | None = None
-        self._tibber_connection = tibber_connection
-
-    async def _async_update_data(self) -> None:
-        """Update data via API."""
-        _LOGGER.debug("async_update called for TibberDataCoordinator")
-
-        try:
-            if (
-                self._last_updated
-                and self._last_updated.hour == dt_util.now().hour
-            ):
-                _LOGGER.debug("Not updating, last hour: {}".format(self._last_updated.hour))
-                return
-            
-            for home in self._tibber_connection.get_homes(only_active=True):   
-                await home.update_info_and_price_info()
-
-
-
-            self._last_updated = dt_util.now()
-                
-           
-            await self._tibber_connection.fetch_consumption_data_active_homes()
-            await self._tibber_connection.fetch_production_data_active_homes()
-            await self._insert_statistics()
-        except RetryableHttpExceptionError as err:
-            raise UpdateFailed(f"Error communicating with API ({err.status})") from err
-        except FatalHttpExceptionError:
-            # Fatal error. Reload config entry to show correct error.
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            )
-
-    async def _insert_statistics(self) -> None:
-        """Insert Tibber statistics."""
-        for home in self._tibber_connection.get_homes():
-            sensors: list[tuple[str, bool, str]] = []
-            if home.hourly_consumption_data:
-                sensors.append(("consumption", False, UnitOfEnergy.KILO_WATT_HOUR))
-                sensors.append(("totalCost", False, home.currency))
-            if home.hourly_production_data:
-                sensors.append(("production", True, UnitOfEnergy.KILO_WATT_HOUR))
-                sensors.append(("profit", True, home.currency))
-
-            for sensor_type, is_production, unit in sensors:
-                statistic_id = (
-                    f"{TIBBER_DOMAIN}:energy_"
-                    f"{sensor_type.lower()}_"
-                    f"{home.home_id.replace('-', '')}"
-                )
-
-                last_stats = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics, self.hass, 1, statistic_id, True, set()
-                )
-
-                if not last_stats:
-                    # First time we insert 5 years of data (if available)
-                    hourly_data = await home.get_historic_data(
-                        5 * 365 * 24, production=is_production
-                    )
-
-                    _sum = 0.0
-                    last_stats_time = None
-                else:
-                    # hourly_consumption/production_data contains the last 30 days
-                    # of consumption/production data.
-                    # We update the statistics with the last 30 days
-                    # of data to handle corrections in the data.
-                    hourly_data = (
-                        home.hourly_production_data
-                        if is_production
-                        else home.hourly_consumption_data
-                    )
-
-                    from_time = dt_util.parse_datetime(hourly_data[0]["from"])
-                    if from_time is None:
-                        continue
-                    start = from_time - timedelta(hours=1)
-                    stat = await get_instance(self.hass).async_add_executor_job(
-                        statistics_during_period,
-                        self.hass,
-                        start,
-                        None,
-                        {statistic_id},
-                        "hour",
-                        None,
-                        {"sum"},
-                    )
-                    first_stat = stat[statistic_id][0]
-                    _sum = cast(float, first_stat["sum"])
-                    last_stats_time = first_stat["start"]
-
-                statistics = []
-
-                last_stats_time_dt = (
-                    dt_util.utc_from_timestamp(last_stats_time)
-                    if last_stats_time
-                    else None
-                )
-
-                for data in hourly_data:
-                    if data.get(sensor_type) is None:
-                        continue
-
-                    from_time = dt_util.parse_datetime(data["from"])
-                    if from_time is None or (
-                        last_stats_time_dt is not None
-                        and from_time <= last_stats_time_dt
-                    ):
-                        continue
-
-                    _sum += data[sensor_type]
-
-                    statistics.append(
-                        StatisticData(
-                            start=from_time,
-                            state=data[sensor_type],
-                            sum=_sum,
-                        )
-                    )
-
-                metadata = StatisticMetaData(
-                    has_mean=False,
-                    has_sum=True,
-                    name=f"{home.name} {sensor_type}",
-                    source=TIBBER_DOMAIN,
-                    statistic_id=statistic_id,
-                    unit_of_measurement=unit,
-                )
-                async_add_external_statistics(self.hass, metadata, statistics)

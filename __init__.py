@@ -32,7 +32,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tibber component."""
 
     hass.data[DATA_HASS_CONFIG] = config
-    
     return True
 
 
@@ -43,9 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         access_token=entry.data[CONF_ACCESS_TOKEN],
         websession=async_get_clientsession(hass),
         time_zone=dt_util.DEFAULT_TIME_ZONE,
-        tax_rate=entry.options.get("tax_rate"),
-        surcharge_price_excl=entry.options.get("surcharge_price_excl"),
-        tax_per_kwh=entry.options.get("tax_per_kwh"),
+        tax_rate=entry.options.get("tax_rate") or 0,
+        surcharge_price_excl=entry.options.get("surcharge_price_excl") or 0,
+        tax_per_kwh=entry.options.get("tax_per_kwh") or 0,
     )
     hass.data[DOMAIN] = tibber_connection
 

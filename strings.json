@@ -15,6 +15,21 @@
         "name": "Electricity price total incl vat (Calculated)"
       },
 
+      "hour_cheapest_top": {
+        "name": "Hour in is the top X cheapest hours today"
+      },
+      "hour_cheapest_top_after_0000": {
+        "name": "Hour in is the top X cheapest hours today between 0:00 and 9:00"
+      },
+      "hour_cheapest_top_after_0800": {
+        "name": "Hour in is the top X cheapest hours today between 8:00 and 18:00"
+      },
+      "hour_cheapest_top_after_1800": {
+        "name": "Hour in is the top X cheapest hours today between 18:00 and 0:00"
+      },
+
+      
+
 
       "electricity_price_surcharge_excl": {
         "name": "Electricity price Tibber surcharge excl VAT"
@@ -147,6 +162,11 @@
         },
         "description": "Enter your access token from {url}"
       }
+    }
+  },
+  "exceptions": {
+    "send_message_timeout": {
+      "message": "Timeout sending message with Tibber"
     }
   }
 }

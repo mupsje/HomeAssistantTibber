@@ -1,15 +1,19 @@
 """Support for Tibber notifications."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 import logging
 from typing import Any
 
+from tibber import Tibber
+
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -24,7 +28,7 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> TibberNotificationService:
     """Get the Tibber notification service."""
-    tibber_connection = hass.data[TIBBER_DOMAIN]
+    tibber_connection: Tibber = hass.data[TIBBER_DOMAIN]
     return TibberNotificationService(tibber_connection.send_notification)
 
 
@@ -40,5 +44,9 @@ class TibberNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         try:
             await self._notify(title=title, message=message)
-        except TimeoutError:
-            _LOGGER.error("Timeout sending message with Tibber")
+        except TimeoutError as exc:
+            raise HomeAssistantError(
+                translation_domain=TIBBER_DOMAIN, translation_key="send_message_timeout"
+            ) from exc
+
+

@@ -1,7 +1,7 @@
 {
   "domain": "tibber_adv",
   "name": "Tibber Advanced",
-  "codeowners": ["@brupje"],
+  "codeowners": ["@brupje","@danielhiversen"],
   "config_flow": true,
   "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/tibber",
