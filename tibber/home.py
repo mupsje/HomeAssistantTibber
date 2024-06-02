@@ -423,7 +423,7 @@ class TibberHome:
         """Get current price total."""
         if not self._current_price_info:
             return None
-        return self._current_price_info.get("energy")+ self._tibber_control.surcharge_price_excl 
+        return (self._current_price_info.get("energy")+ self._tibber_control.surcharge_price_excl )* self._tibber_control.tax_rate 
     
 
     @property
@@ -431,7 +431,7 @@ class TibberHome:
         """Get current price total."""
         if not self._current_price_info:
             return None
-        return (self._current_price_info.get("energy")+ self._tibber_control.surcharge_price_excl ) *100
+        return (self._current_price_info.get("energy")+ self._tibber_control.surcharge_price_excl ) *100* self._tibber_control.tax_rate 
     
 
 
