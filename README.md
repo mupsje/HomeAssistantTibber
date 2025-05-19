@@ -15,3 +15,8 @@ Overview of available sensors (base price shown here is €0.00)
 
 
 Useful for people with excess solar power energy in The Netherlands, where you get tax back for produced solar power.
+
+Taxes are here : https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/overige_belastingen/belastingen_op_milieugrondslag/energiebelasting/
+and the cost Tibber are here , you need to extract the tax from it. example 0,1228 incl 21% the it will be 0.097012 Surcharge price per KWH Excl Tax*
+https://support.tibber.com/nl/articles/5605892-de-kosten-bij-tibber
+
